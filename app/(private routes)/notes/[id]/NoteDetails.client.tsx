@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api/api';
+import { fetchNoteById, deleteNote } from '@/lib/api/clientApi';
 import type { Note } from '@/types/note';
 
 interface NoteDetailsClientProps {
@@ -17,10 +17,7 @@ export default function NoteDetailsClient({ noteId }: NoteDetailsClientProps) {
 
   const { data: note, isLoading, isError } = useQuery<Note>({
     queryKey: ['note', noteId],
-    queryFn: async () => {
-      const response = await api.get<Note>(`/notes/${noteId}`);
-      return response.data;
-    },
+    queryFn: () => fetchNoteById(noteId),
   });
 
   const handleDelete = async () => {
@@ -28,10 +25,7 @@ export default function NoteDetailsClient({ noteId }: NoteDetailsClientProps) {
 
     setDeleting(true);
     try {
-      const response = await api.delete(`/notes/${noteId}`);
-      if (response.status !== 200 && response.status !== 204) {
-        throw new Error('Failed to delete note');
-      }
+      await deleteNote(noteId);
       router.push('/notes');
       router.refresh();
     } catch (err: unknown) {
@@ -40,6 +34,7 @@ export default function NoteDetailsClient({ noteId }: NoteDetailsClientProps) {
       } else {
         setError('Failed to delete note');
       }
+    } finally {
       setDeleting(false);
     }
   };
@@ -80,7 +75,6 @@ export default function NoteDetailsClient({ noteId }: NoteDetailsClientProps) {
               {note.content || 'No content provided.'}
             </p>
           </div>
-
           <div style={{ display: 'flex', gap: '10px' }}>
             <button
               onClick={() => router.push('/notes')}

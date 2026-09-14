@@ -87,3 +87,7 @@ export async function updateMe(data: UpdateUserPayload): Promise<User> {
   const response = await api.patch<User>('/users/me', data);
   return response.data;
 }
+
+// Добавляем экспорты, чтобы модуль мог отдавать и api, и clientApi по любому запросу
+export { api };
+export { api as clientApi };
