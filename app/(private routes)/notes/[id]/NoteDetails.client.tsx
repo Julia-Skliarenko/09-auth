@@ -1,40 +1,110 @@
 'use client';
 
-import React from 'react';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { useParams } from 'next/navigation';
-import { fetchNoteById } from '../../../../lib/api/clientApi';
-import css from './NoteDetails.module.css';
+import { api } from '@/lib/api/api';
+import type { Note } from '@/types/note';
 
-export default function NoteDetailsClient() {
-  const { id } = useParams<{ id: string }>();
+interface NoteDetailsClientProps {
+  noteId: string;
+}
 
-  const { data: note, isLoading, isError } = useQuery({
-    queryKey: ['note', id],
-    queryFn: () => fetchNoteById(id),
-    refetchOnMount: false,
+export default function NoteDetailsClient({ noteId }: NoteDetailsClientProps) {
+  const router = useRouter();
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState('');
+
+  const { data: note, isLoading, isError } = useQuery<Note>({
+    queryKey: ['note', noteId],
+    queryFn: async () => {
+      const response = await api.get<Note>(`/notes/${noteId}`);
+      return response.data;
+    },
   });
 
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this note?')) return;
+
+    setDeleting(true);
+    try {
+      const response = await api.delete(`/notes/${noteId}`);
+      if (response.status !== 200 && response.status !== 204) {
+        throw new Error('Failed to delete note');
+      }
+      router.push('/notes');
+      router.refresh();
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Failed to delete note');
+      }
+      setDeleting(false);
+    }
+  };
+
   if (isLoading) {
-    return <p>Loading, please wait...</p>;
+    return <div style={{ textAlign: 'center', marginTop: '40px' }}>Loading note...</div>;
   }
 
-  if (isError || !note) {
-    return <p>Something went wrong.</p>;
+  if (isError || error) {
+    return (
+      <div style={{ maxWidth: '600px', margin: '40px auto', padding: '20px', textAlign: 'center' }}>
+        <p style={{ color: 'red', marginBottom: '20px' }}>{error || 'Failed to fetch note details'}</p>
+        <button
+          onClick={() => router.push('/notes')}
+          style={{ padding: '8px 16px', cursor: 'pointer' }}
+        >
+          Back to Notes
+        </button>
+      </div>
+    );
   }
 
   return (
-    <main className={css.main}>
-      <div className={css.container}>
-        <div className={css.item}>
-          <div className={css.header}>
-            <h2>{note.title}</h2>
+    <div style={{ maxWidth: '600px', margin: '40px auto', padding: '20px' }}>
+      {note && (
+        <>
+          <h1>{note.title}</h1>
+          <div
+            style={{
+              background: '#f9f9f9',
+              padding: '20px',
+              borderRadius: '6px',
+              margin: '20px 0',
+              border: '1px solid #eaeaea',
+            }}
+          >
+            <p style={{ whiteSpace: 'pre-wrap', lineHeight: '1.5' }}>
+              {note.content || 'No content provided.'}
+            </p>
           </div>
-          <p className={css.tag}>{note.tag}</p>
-          <p className={css.content}>{note.content}</p>
-          <p className={css.date}>{new Date(note.createdAt).toLocaleDateString()}</p>
-        </div>
-      </div>
-    </main>
+
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button
+              onClick={() => router.push('/notes')}
+              style={{ padding: '10px 15px', cursor: 'pointer' }}
+            >
+              Back to List
+            </button>
+            <button
+              onClick={handleDelete}
+              disabled={deleting}
+              style={{
+                padding: '10px 15px',
+                cursor: 'pointer',
+                background: '#ff4d4d',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '4px',
+              }}
+            >
+              {deleting ? 'Deleting...' : 'Delete Note'}
+            </button>
+          </div>
+        </>
+      )}
+    </div>
   );
 }

@@ -47,8 +47,8 @@ export async function getMe(): Promise<User> {
   return response.data;
 }
 
-export async function checkSession(): Promise<User | null> {
+export async function checkSession() {
   const authConfig = await getAuthHeaders();
   const response = await api.get<User | null>('/auth/session', authConfig);
-  return response.data;
+  return response;
 }

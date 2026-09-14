@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import Header from "@/components/Header/Header";
 import Footer from "@/components/Footer/Footer";
-import Providers from "@/components/Providers";
+import TanStackProvider from "@/components/TanStackProvider/TanStackProvider";
+import AuthProvider from "@/components/AuthProvider/AuthProvider";
 import "./globals.css";
 
 const roboto = Roboto({
@@ -39,16 +40,18 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body 
-        className={roboto.variable} 
+      <body
+        className={roboto.variable}
         style={{ display: "flex", flexDirection: "column", minHeight: "100vh", margin: 0 }}
       >
-        <Providers>
-          <Header />
-          <main style={{ flex: 1, display: "flex", flexDirection: "column" }}>{children}</main>
-          {modal}
-          <Footer />
-        </Providers>
+        <TanStackProvider>
+          <AuthProvider>
+            <Header />
+            <main style={{ flex: 1, display: "flex", flexDirection: "column" }}>{children}</main>
+            {modal}
+            <Footer />
+          </AuthProvider>
+        </TanStackProvider>
       </body>
     </html>
   );

@@ -1,10 +1,10 @@
 import { api } from './api';
 import type { Note } from '@/types/note';
+import type { User } from '@/types/user';
 
-export interface User {
-  email: string;
-  username: string;
-  avatar: string;
+export interface UpdateUserPayload {
+  username?: string;
+  avatar?: string;
 }
 
 export interface FetchNotesResponse {
@@ -83,7 +83,7 @@ export async function getMe(): Promise<User> {
   return response.data;
 }
 
-export async function updateMe(data: Partial<AuthPayload>): Promise<User> {
+export async function updateMe(data: UpdateUserPayload): Promise<User> {
   const response = await api.patch<User>('/users/me', data);
   return response.data;
 }
