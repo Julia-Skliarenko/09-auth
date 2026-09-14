@@ -1,21 +1,13 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useAuthStore } from '@/lib/store/authStore';
 import { updateMe } from '@/lib/api/clientApi';
 import css from './EditProfilePage.module.css';
-
-export default function EditProfilePage() {
-  const router = useRouter();
-  const user = useAuthStore((state) => state.user);
-  const setUser = useAuthStore((state) => state.setUser);
-
-  if (!user) return null;
-
-  return <EditForm key={user.email} user={user} setUser={setUser} router={router} />;
-}
 
 type UserType = NonNullable<ReturnType<typeof useAuthStore.getState>['user']>;
 
@@ -88,4 +80,16 @@ function EditForm({ user, setUser, router }: EditFormProps) {
       </div>
     </main>
   );
+}
+
+export default function EditProfilePage() {
+  const router = useRouter();
+  const user = useAuthStore((state) => state.user);
+  const setUser = useAuthStore((state) => state.setUser);
+
+  if (!user) {
+    return <main className={css.mainContent}><p>Loading...</p></main>;
+  }
+
+  return <EditForm key={user.email} user={user} setUser={setUser} router={router} />;
 }
