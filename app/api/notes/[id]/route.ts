@@ -1,23 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
-const BACKEND_URL = process.env.BACKEND_URL || 'https://your-backend-api.com';
+const BACKEND_URL = process.env.BACKEND_URL || 'https://notehub-api.goit.study';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
-
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const { id } = await context.params;
     const cookieStore = await cookies();
-    const token = cookieStore.get('token')?.value;
 
     const backendResponse = await fetch(`${BACKEND_URL}/notes/${id}`, {
       method: 'GET',
       headers: {
-        'Cookie': `token=${token}`,
+        'Cookie': cookieStore.toString(), // Передаем все куки (accessToken и refreshToken)
         'Content-Type': 'application/json',
       },
     });
@@ -33,17 +31,15 @@ export async function GET(request: NextRequest, context: RouteContext) {
   }
 }
 
-
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
     const { id } = await context.params;
     const cookieStore = await cookies();
-    const token = cookieStore.get('token')?.value;
 
     const backendResponse = await fetch(`${BACKEND_URL}/notes/${id}`, {
       method: 'DELETE',
       headers: {
-        'Cookie': `token=${token}`,
+        'Cookie': cookieStore.toString(), // Передаем все куки
         'Content-Type': 'application/json',
       },
     });
