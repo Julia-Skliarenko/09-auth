@@ -16,7 +16,7 @@ export function NoteForm() {
     onSuccess: () => {
       clearDraft();
       queryClient.invalidateQueries({ queryKey: ['notes'] });
-      router.push('/notes/filter/all');
+      router.back(); // Заменили push на back, чтобы модалка закрылась
     },
     onError: (error) => {
       console.error('Failed to create note:', error);

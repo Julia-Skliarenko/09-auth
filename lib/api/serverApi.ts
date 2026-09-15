@@ -1,12 +1,15 @@
 import { cookies } from 'next/headers';
-import { api } from './api';
+import axios from 'axios';
 import type { Note } from '@/types/note';
 import type { User } from '@/types/user';
 
-export interface FetchNotesResponse {
-  notes: Note[];
-  totalPages: number;
-}
+const BACKEND_URL = process.env.BACKEND_URL || 'https://notehub-api.goit.study';
+
+
+const serverAxios = axios.create({
+  baseURL: BACKEND_URL,
+  withCredentials: true,
+});
 
 async function getAuthHeaders() {
   const cookieStore = await cookies();
@@ -17,18 +20,13 @@ async function getAuthHeaders() {
   };
 }
 
-export async function fetchNotes(
-  page: number = 1,
-  perPage: number = 12,
-  search?: string,
-  tag?: string
-): Promise<FetchNotesResponse> {
+export async function fetchNotes(page = 1, perPage = 12, search = '', tag = '') {
   const authConfig = await getAuthHeaders();
   const params: Record<string, string | number> = { page, perPage };
   if (search?.trim()) params.search = search.trim();
   if (tag?.trim()) params.tag = tag.trim();
 
-  const response = await api.get<FetchNotesResponse>('/notes', {
+  const response = await serverAxios.get<{ notes: Note[]; totalPages: number }>('/notes', {
     ...authConfig,
     params,
   });
@@ -37,18 +35,28 @@ export async function fetchNotes(
 
 export async function fetchNoteById(id: string): Promise<Note> {
   const authConfig = await getAuthHeaders();
-  const response = await api.get<Note>(`/notes/${id}`, authConfig);
+  const response = await serverAxios.get<Note>(`/notes/${id}`, authConfig);
+  return response.data;
+}
+
+export async function deleteNote(id: string): Promise<Note> {
+  const authConfig = await getAuthHeaders();
+  const response = await serverAxios.delete<Note>(`/notes/${id}`, authConfig);
   return response.data;
 }
 
 export async function getMe(): Promise<User> {
   const authConfig = await getAuthHeaders();
-  const response = await api.get<User>('/users/me', authConfig);
+  const response = await serverAxios.get<User>('/users/me', authConfig);
   return response.data;
 }
 
 export async function checkSession() {
-  const authConfig = await getAuthHeaders();
-  const response = await api.get<User | null>('/auth/session', authConfig);
-  return response;
+  try {
+    const authConfig = await getAuthHeaders();
+    const response = await serverAxios.get<User | null>('/auth/session', authConfig);
+    return response;
+  } catch {
+    return null;
+  }
 }
